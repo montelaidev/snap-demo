@@ -1,9 +1,10 @@
-import { useContext } from 'react';
+import { useContext, useState } from 'react';
 import styled from 'styled-components';
 import { MetamaskActions, MetaMaskContext } from '../hooks';
 import {
   connectSnap,
   getSnap,
+  sendGuess,
   sendHello,
   shouldDisplayReconnectButton,
 } from '../utils';
@@ -101,6 +102,7 @@ const ErrorMessage = styled.div`
 
 const Index = () => {
   const [state, dispatch] = useContext(MetaMaskContext);
+  const [input, setInput] = useState(Math.round(Math.random() * 100));
 
   const handleConnectClick = async () => {
     try {
@@ -120,6 +122,15 @@ const Index = () => {
   const handleSendHelloClick = async () => {
     try {
       await sendHello();
+    } catch (e) {
+      dispatch({ type: MetamaskActions.SetError, payload: e });
+    }
+  };
+
+  const handleSendGuessClick = async (guess) => {
+    try {
+      await sendGuess(guess, input);
+      setInput(Math.round(Math.random() * 100));
     } catch (e) {
       console.error(e);
       dispatch({ type: MetamaskActions.SetError, payload: e });
@@ -191,6 +202,43 @@ const Index = () => {
             button: (
               <SendHelloButton
                 onClick={handleSendHelloClick}
+                disabled={!state.installedSnap}
+              />
+            ),
+          }}
+          disabled={!state.installedSnap}
+          fullWidth={
+            state.isFlask &&
+            Boolean(state.installedSnap) &&
+            !shouldDisplayReconnectButton(state.installedSnap)
+          }
+        />
+
+        <Card
+          content={{
+            title: `Send lower than ${input}`,
+            description: 'Send a guess to the snap',
+            button: (
+              <SendHelloButton
+                onClick={() => handleSendGuessClick('lower')}
+                disabled={!state.installedSnap}
+              />
+            ),
+          }}
+          disabled={!state.installedSnap}
+          fullWidth={
+            state.isFlask &&
+            Boolean(state.installedSnap) &&
+            !shouldDisplayReconnectButton(state.installedSnap)
+          }
+        />
+        <Card
+          content={{
+            title: `Send higher than ${input}`,
+            description: 'Send a guess to the snap',
+            button: (
+              <SendHelloButton
+                onClick={() => handleSendGuessClick('higher')}
                 disabled={!state.installedSnap}
               />
             ),
